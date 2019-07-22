@@ -1,0 +1,17 @@
+- hosts: all
+  tasks:
+   - include_vars: "ip1.yml"
+   - copy:
+        dest: "/etc/hadoop/mapred-site.xml"
+        content: "<?xml version='1.0'?>\n<?xml-stylesheet type='text/xsl' href='configuration.xsl'?>\n<!-- Put site-specific property overrides in this file. -->\n<configuration>\n<property>\n<name>mapred.job.tracker</name>\n<value>{{ jip }}:9002</value>\n</property>\n</configuration>"
+- hosts: jobtracker
+  tasks:
+  - include_vars: "dir"
+  - copy:
+       dest: "/etc/hadoop/core-site.xml"
+       content: "<?xml version='1.0'?>\n<?xml-stylesheet type='text/xsl' href='configuration.xsl'?>\n<!-- Put site-specific property overrides in this file. -->\n<configuration>\n<property>\n<name>fs.default.name</name>\n<value>hdfs://{{ mip }}:9001</value>\n</property>\n</configuration>"
+  - command: "hadoop-daemon.sh start jobtracker"
+
+- hosts: tasktracker
+  tasks:
+   - command: "hadoop-daemon.sh start tasktracker"     

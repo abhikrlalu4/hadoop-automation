@@ -1,0 +1,60 @@
+- hosts: slave
+  tasks:
+     - include_vars: "/var/www/cgi-bin/hosts"
+#     - get_url:
+#           url: "http://192.168.43.102/proj/hadoop-1.2.1-1.x86_64.rpm"
+#           dest: "/root/Desktop"
+#     - get_url:
+#           url: "http://192.168.43.102/proj/jdk-8u171-linux-x64.rpm"
+#           dest: "/root/Desktop"
+#     - command: "rpm -ivh /root/Desktop/jdk-8u171-linux-x64.rpm"
+#     - command: "rpm -ivh /root/Desktop/hadoop-1.2.1-1.x86_64.rpm --force"
+#     - lineinfile:
+#           path: "/root/.bashrc"
+#           line: "export JAVA_HOME=/usr/java/jdk1.8.0_171-amd64/"
+#           create: yes
+#     - lineinfile:
+#           path: "/root/.bashrc"
+#           line: "export PATH=/usr/java/jdk1.8.0_171-amd64/bin/:$PATH"  
+     - file: 
+           path: /drone
+           state: directory  
+     - copy: 
+           dest: "/etc/hadoop/hdfs-site.xml"
+           content: |
+                <?xml version="1.0"?>
+                <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+                <!-- Put site-specific property overrides in this file. -->
+
+                <configuration>
+
+                <property>
+                <name>dfs.data.dir</name>
+                <value>/drone</value>
+                </property>
+
+                </configuration>
+   
+     - copy:
+           dest: "/etc/hadoop/core-site.xml"
+           content: |
+                <?xml version="1.0"?>
+                <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+                <!-- Put site-specific property overrides in this file. -->
+
+                <configuration>
+
+                <property>
+                <name>fs.default.name</name>
+                <value>hdfs://{{ item }}:9001</value>
+                </property>
+      
+                </configuration>
+       with_items:
+           - "{{ master }}"  
+  
+     - command: "iptables -F"
+     - command: "setenforce 0"
+     - command: "hadoop-daemon.sh start datanode"  
